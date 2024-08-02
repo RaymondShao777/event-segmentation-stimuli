@@ -1,10 +1,6 @@
+
 // base game loop
 var player_piece;
-const player_img = new Image();
-player_img.src = "assets/sprite.png";
-const bg = new Image();
-bg.src = "assets/bg.png";
-
 function start_game() {
   player_piece = new player(player_img, 96, 96, 200-48, 160);
   game_area.start();
@@ -40,12 +36,12 @@ function player(image, width, height, x, y) {
   this.update = function() {
     // update animation if player is moving
     if (this.to_move != 0) {
-      this.to_move -= this.speed;
+      this.to_move -= 1;
       this.image.src = `assets/sprite_${this.to_move}.png`;
     } else {
       this.image.src = "assets/sprite.png";
     }
-    ctx = game_area.context;
+    const ctx = game_area.context;
     ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
   }
 }
@@ -56,6 +52,7 @@ function move() {
     player_piece.to_move = 8;
   }
 }
+
 // control player movement
 window.addEventListener("keydown", (e) => {
   if (e.code == "ArrowRight") {
@@ -63,3 +60,33 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
+// preload images
+function preload(srcs) {
+  const promises = srcs.map((src) => {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+
+      image.src = src;
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(`Image failed to load: ${src}`);
+    });
+  });
+
+  return Promise.all(promises);
+}
+
+const srcs = [
+  "assets/sprite.png",
+  "assets/bg.png",
+];
+
+for (let i = 0; i < 8; i++) {
+  srcs.push(`assets/sprite_${i}.png`);
+}
+
+const images = await preload(srcs);
+const player_img = images[0];
+const bg = images[1];
+
+// begin the game loop
+start_game();
