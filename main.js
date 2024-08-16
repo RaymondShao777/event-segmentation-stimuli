@@ -1,24 +1,35 @@
-import './style.css'
-import javascriptLogo from './javascript.svg'
-import viteLogo from '/vite.svg'
-import { setupCounter } from './counter.js'
+import {Button} from "./modules/component.js"
+import {start_game} from "./game.js"
 
-document.querySelector('#app').innerHTML = `
-  <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="${viteLogo}" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank">
-      <img src="${javascriptLogo}" class="logo vanilla" alt="JavaScript logo" />
-    </a>
-    <h1>Hello Vite!</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
-    </div>
-    <p class="read-the-docs">
-      Click on the Vite logo to learn more
-    </p>
-  </div>
-`
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+ctx.textAlign = "center";
+ctx.textBaseline = "middle";
+ctx.font = `64px "verdana", sans-serif`;
+ctx.fillText("Title", 200, 100);
+const play_button = new Button(ctx, 150, 175, 100, 50, "#DBCDF0", "start");
 
-setupCounter(document.querySelector('#counter'))
+function handle_play(e) {
+  const rect = this.getBoundingClientRect();
+  const mouse = {
+    x: e.clientX - rect.left,
+    y: e.clientY - rect.top
+  };
+  if (play_button.is_on_button(mouse.x, mouse.y)) {
+    canvas.removeEventListener('click', handle_play);
+    canvas.removeEventListener('mousemove', hover);
+    start_game();
+  }
+}
+
+function hover(e) {
+  const rect = this.getBoundingClientRect();
+  const mouse = {
+    x: e.clientX - rect.left,
+    y: e.clientY - rect.top
+  };
+  play_button.is_on_button(mouse.x, mouse.y);
+}
+
+canvas.addEventListener('click', handle_play);
+canvas.addEventListener('mousemove', hover);
