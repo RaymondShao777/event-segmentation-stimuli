@@ -1,4 +1,21 @@
-import game_area from "../game.js"
+//import game_area from "../game.js"
+
+class Component {
+  constructor(x, y, width, height, img) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.img = img;
+  }
+}
+
+class Player extends Component {
+  constructor(x, y, width, height, img, backpack) {
+    super(x, y, width, height, img);
+    this.backpack = backpack;
+  }
+}
 
 function item(image, sound, width, height, x, y, speed) {
   this.x = x;
@@ -122,4 +139,4 @@ function rgb_string(rgb) {
   return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
 }
 
-export {item, player, background, Button}
+export {item, Player, background, Button}
