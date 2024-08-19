@@ -10,13 +10,20 @@ class Component {
   }
 }
 
+class Item extends Component {
+  constructor(x, y, width, height, img) {
+    super(x, y, width, height, img);
+    this.visible = true;
+  }
+}
+
 class Player extends Component {
   constructor(x, y, width, height, img) {
     super(x, y, width, height, img);
     this.backpack = [];
   }
 
-  set pickup(item){
+  pickup(item){
     this.backpack.push(item);
   }
 
@@ -161,4 +168,4 @@ function rgb_string(rgb) {
   return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
 }
 
-export {item, Player, background, Button, Component}
+export {item, Player, background, Button, Item}

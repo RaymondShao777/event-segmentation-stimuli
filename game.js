@@ -41,13 +41,11 @@ class Game {
     this.context.drawImage(this.bg, this.camX, this.camY, this.camSizeX, this.y,
       0, 0, this.camSizeX, this.y);
 
-    // draw player
-    this.context.drawImage(this.player.img,
-      this.player.x - this.camX, this.player.y - this.camY,
-      this.player.width, this.player.height);
-
     // draw items
     for (const i in this.items) {
+      if (!this.items[i].visible) {
+        continue;
+      }
       // check that item is in frame
       if ((this.items[i].x >= this.camX && this.items[i].x < (this.camX+this.camSizeX)) ||
           (this.items[i].x+this.items[i].width > this.camX &&
@@ -57,6 +55,12 @@ class Game {
           this.items[i].width, this.items[i].height);
       }
     }
+
+    // draw player
+    this.context.drawImage(this.player.img,
+      this.player.x - this.camX, this.player.y - this.camY,
+      this.player.width, this.player.height);
+
   }
 
   set addPlayer(newPlayer){

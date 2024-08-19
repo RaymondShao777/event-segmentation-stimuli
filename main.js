@@ -1,5 +1,5 @@
-import {Player, Button, Component} from "./modules/component.js"
-import {MoveEvent} from "./modules/event.js"
+import {Player, Button, Item} from "./modules/component.js"
+import {MoveEvent, PickupEvent} from "./modules/event.js"
 import {Game} from "./game.js"
 /*-------------------------------------------------
  * ASSET LOADING (KEEP THIS HERE FOR NOW)
@@ -76,10 +76,12 @@ let game = new Game(1600, 300, 400, bg, 64);
 game.addPlayer = new Player(100, (300-96)*0.75, 96, 96, player_img);
 game.player.addMoveAnimation = playerMove;
 // add objects
-game.addItem = new Component(300, 175, 84, 84, object_imgs[0]);
+const item1 = new Item(300, 175, 84, 84, object_imgs[0]);
+game.addItem = item1;
 // add events
 let events = [new MoveEvent(game, 5, true, 100),
-  new MoveEvent(game, 1, true, 30)];
+  new PickupEvent(game, 0.5, true, item1),
+  new MoveEvent(game, 10, true, 200)];
 
 function handle_play(e) {
   const rect = this.getBoundingClientRect();

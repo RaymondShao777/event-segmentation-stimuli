@@ -40,11 +40,17 @@ class PickupEvent extends GameEvent{
   constructor(game, time, auto=true, item) {
     super(game, time, auto);
     this.item = item;
-    this._game.player.pickup(item);
+    this.speed = (this.item.x-
+      (this._game.player.x+this._game.player.width))/(this.time);
   }
 
   update() {
-    
+    this.time--;
+    if (this.time == 1) {
+      this._game.player.pickup(this.item);
+      this.item.visible = false
+    }
+    this.item.x -= this.speed;
   }
 }
 
@@ -53,4 +59,4 @@ function drop(game, time, auto=true, item) {
   console.log()
 }
 
-export {MoveEvent}
+export {MoveEvent, PickupEvent}
