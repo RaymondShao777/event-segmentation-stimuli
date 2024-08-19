@@ -17,19 +17,35 @@ class MoveEvent extends GameEvent {
     super(game, time, auto);
     this.distance = distance;
     this.speed = distance/(time*game.ticks);
+    this.ticks_to_animate = 4;
+    this.animateCurrent = 1;
   }
 
   // updates current tick
   update() {
     this.time--;
     // move player
+    let animate = (this.animateCurrent++ % this.ticks_to_animate == 0);
+    this.game.player.move(this.speed, animate);
+
     // move picked up items
+
+    // update camera
+    this.game.moveCamera();
   }
 }
 
 // player picks up object
-function pickup(game, time, auto=true, item) {
-  console.log()
+class PickupEvent extends GameEvent{
+  constructor(game, time, auto=true, item) {
+    super(game, time, auto);
+    this.item = item;
+    this._game.player.pickup(item);
+  }
+
+  update() {
+    
+  }
 }
 
 // player drops object

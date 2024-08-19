@@ -1,4 +1,4 @@
-import {Button} from "./modules/component.js"
+import {Player, Button, Component} from "./modules/component.js"
 import {MoveEvent} from "./modules/event.js"
 import {Game} from "./game.js"
 /*-------------------------------------------------
@@ -42,22 +42,22 @@ const srcs = [
 ];
 
 const sounds = []
+const playerMoveSrc = []
+const objSrc = []
 
 for (let i = 0; i < 8; i++) {
   const obj_id = Math.floor(Math.random() * 30) + 1
-  srcs.push(`assets/sprite_${i}.png`);
-  srcs.push(`assets/${obj_id}.png`);
+  playerMoveSrc.push(`assets/sprite_${i}.png`);
+  objSrc.push(`assets/${obj_id}.png`);
 //  sounds.push(`assets/${obj_id}.m4a`);
   sounds.push(new sound(`assets/test.m4a`));
 }
 
 const images = await preload(srcs);
+const playerMove = await preload(playerMoveSrc);
 const player_img = images[0];
 const bg = images[1];
-const object_imgs = []
-for (let i = 10; i < 18; i++) {
-  object_imgs.push(images[i]);
-}
+const object_imgs = await preload(objSrc);
 //---------------------------------------------------------
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -71,8 +71,14 @@ const play_button = new Button(ctx, 150, 175, 100, 50, "#DBCDF0", "start");
 
 
 // intialize game
-let game = new Game(1600, 300, 400, bg, 64, player_img);
-let events = [new MoveEvent(game, 20, true, 30),
+let game = new Game(1600, 300, 400, bg, 64);
+// add player
+game.addPlayer = new Player(100, (300-96)*0.75, 96, 96, player_img);
+game.player.addMoveAnimation = playerMove;
+// add objects
+game.addItem = new Component(300, 175, 84, 84, object_imgs[0]);
+// add events
+let events = [new MoveEvent(game, 5, true, 100),
   new MoveEvent(game, 1, true, 30)];
 
 function handle_play(e) {

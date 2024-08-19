@@ -11,9 +11,31 @@ class Component {
 }
 
 class Player extends Component {
-  constructor(x, y, width, height, img, backpack) {
+  constructor(x, y, width, height, img) {
     super(x, y, width, height, img);
-    this.backpack = backpack;
+    this.backpack = [];
+  }
+
+  set pickup(item){
+    this.backpack.push(item);
+  }
+
+  move(distance, animate = false){
+    this.x += distance;
+
+    if (! animate)
+      return;
+    // advances animation
+    this.img = this.moveCycle[this.current];
+    this.current++;
+    if (this.current == this.moveCycle.length){
+      this.current = 0;
+    }
+  }
+
+  set addMoveAnimation(moves){
+    this.moveCycle = moves;
+    this.current = 0;
   }
 }
 
@@ -139,4 +161,4 @@ function rgb_string(rgb) {
   return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
 }
 
-export {item, Player, background, Button}
+export {item, Player, background, Button, Component}
