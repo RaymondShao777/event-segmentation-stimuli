@@ -1,16 +1,19 @@
-import {item, Player, background} from "./modules/component.js"
+import {Player} from "./modules/component.js"
 
 const wait = ms => new Promise(res => setTimeout(res, ms));
 
 class Game {
-  constructor(x, y, camSizeX, bg, ticks=64) {
+  constructor(x, y, camWidth, bg, ticks=64) {
+    this.x = x;
+    this.y = y;
     this.canvas = document.getElementById("game");
     this.context = this.canvas.getContext("2d");
     this.bg = bg;
-    this.x = x;
-    this.y = y;
-    this.camSizeX = camSizeX;
-    this.offset = camSizeX/4;
+    this.bgRealWidth = this.bg.width;
+    this.bgRealHeight = this.bg.height;
+    this.bgWidth = this.bgRealWidth * this.y/this.bgRealHeight;
+    this.bgHeight = this.y;
+    this.camWidth = camWidth;
     this.ticks = ticks; // ticks per second
     this.msPerTick = 1000/this.ticks;
     this.items = []
@@ -37,9 +40,19 @@ class Game {
 
   // the draw function does not change the state of the game
   draw(){
-    // draw bg first
-    this.context.drawImage(this.bg, this.camX, this.camY, this.camSizeX, this.y,
-      0, 0, this.camSizeX, this.y);
+    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    // draw bg
+    // TODO EDIT CODE SO THAT IT DOES NOT WARP THE IMAGE
+    let bgOffset = this.camX%this.bgWidth/this.bgWidth;
+    // draw x pre
+    this.context.drawImage(this.bg,
+      bgOffset*this.bgRealWidth, 0, (1-bgOffset)*this.bgRealWidth, this.bgRealHeight,
+      0, 0, (1-bgOffset)*this.camWidth, this.y);
+    // draw x post
+    this.context.drawImage(this.bg,
+      0, 0, bgOffset*this.bgRealWidth, this.bgRealHeight,
+      (1-bgOffset)*this.camWidth, 0, bgOffset*this.camWidth, this.y);
+    // draw final segment (if needed)
 
     // draw items
     for (const i in this.items) {
@@ -47,9 +60,9 @@ class Game {
         continue;
       }
       // check that item is in frame
-      if ((this.items[i].x >= this.camX && this.items[i].x < (this.camX+this.camSizeX)) ||
+      if ((this.items[i].x >= this.camX && this.items[i].x < (this.camX+this.camWidth)) ||
           (this.items[i].x+this.items[i].width > this.camX &&
-           this.items[i].x+this.items[i].width <= (this.camX+this.camSizeX))) {
+           this.items[i].x+this.items[i].width <= (this.camX+this.camWidth))) {
         this.context.drawImage(this.items[i].img,
           this.items[i].x - this.camX, this.items[i].y - this.camY,
           this.items[i].width, this.items[i].height);
@@ -64,9 +77,10 @@ class Game {
   }
 
   set addPlayer(newPlayer){
-    this.player = newPlayer
-    this.moveCamera()
-    this.camY = 0
+    this.player = newPlayer;
+    this.offset = this.player.x;
+    this.moveCamera();
+    this.camY = 0;
   }
 
   set addItem(newItem){

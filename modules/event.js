@@ -10,6 +10,10 @@ class GameEvent {
   get game() {
     return this._game;
   }
+
+  update() {
+    this.time--;
+  }
 }
 // moves player distance to the right, or to item
 class MoveEvent extends GameEvent {
@@ -23,12 +27,10 @@ class MoveEvent extends GameEvent {
 
   // updates current tick
   update() {
-    this.time--;
-    // move player
+    super.update();
+    // move player and picked up items
     let animate = (this.animateCurrent++ % this.ticks_to_animate == 0);
     this.game.player.move(this.speed, animate);
-
-    // move picked up items
 
     // update camera
     this.game.moveCamera();
@@ -45,7 +47,7 @@ class PickupEvent extends GameEvent{
   }
 
   update() {
-    this.time--;
+    super.update();
     if (this.time == 1) {
       this._game.player.pickup(this.item);
       this.item.visible = false
@@ -55,8 +57,21 @@ class PickupEvent extends GameEvent{
 }
 
 // player drops object
-function drop(game, time, auto=true, item) {
-  console.log()
+class DropEvent extends GameEvent {
+  constructor (game, time, auto=true, item) {
+    super(game, time, auto);
+    this.item = item;
+    this.speed = this.game.player.width/this.time;
+  }
+
+  update() {
+    super.update();
+    if (!this.item.visible) {
+      this.item.visible = true;
+      this.game.player.drop(this.item);
+    }
+    this.item.move(this.speed);
+  }
 }
 
-export {MoveEvent, PickupEvent}
+export {MoveEvent, PickupEvent, DropEvent}

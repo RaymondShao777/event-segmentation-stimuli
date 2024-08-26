@@ -1,5 +1,5 @@
 import {Player, Button, Item} from "./modules/component.js"
-import {MoveEvent, PickupEvent} from "./modules/event.js"
+import {MoveEvent, PickupEvent, DropEvent} from "./modules/event.js"
 import {Game} from "./game.js"
 /*-------------------------------------------------
  * ASSET LOADING (KEEP THIS HERE FOR NOW)
@@ -45,9 +45,9 @@ const sounds = []
 const playerMoveSrc = []
 const objSrc = []
 
-for (let i = 0; i < 8; i++) {
+for (let i = 0; i < 16; i++) {
   const obj_id = Math.floor(Math.random() * 30) + 1
-  playerMoveSrc.push(`assets/sprite_${i}.png`);
+  playerMoveSrc.push(`assets/w${i+1}.png`);
   objSrc.push(`assets/${obj_id}.png`);
 //  sounds.push(`assets/${obj_id}.m4a`);
   sounds.push(new sound(`assets/test.m4a`));
@@ -55,14 +55,14 @@ for (let i = 0; i < 8; i++) {
 
 const images = await preload(srcs);
 const playerMove = await preload(playerMoveSrc);
-const player_img = images[0];
+const player_img = playerMove[0];
 const bg = images[1];
 const object_imgs = await preload(objSrc);
 //---------------------------------------------------------
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
-// turn off antialiasing
-ctx.imageSmoothingEnabled= false;
+// turn off antialiasing (do this if we use pixel art)
+// ctx.imageSmoothingEnabled= false;
 ctx.textAlign = "center";
 ctx.textBaseline = "middle";
 ctx.font = `64px "verdana", sans-serif`;
@@ -71,9 +71,9 @@ const play_button = new Button(ctx, 150, 175, 100, 50, "#DBCDF0", "start");
 
 
 // intialize game
-let game = new Game(1600, 300, 400, bg, 64);
+let game = new Game(1800, 300, 400, bg, 64);
 // add player
-game.addPlayer = new Player(100, (300-96)*0.75, 96, 96, player_img);
+game.addPlayer = new Player(75, (300-200)*0.75, 125, 200, player_img);
 game.player.addMoveAnimation = playerMove;
 // add objects
 const item1 = new Item(300, 175, 84, 84, object_imgs[0]);
@@ -81,16 +81,17 @@ game.addItem = item1;
 // add events
 let events = [new MoveEvent(game, 5, true, 100),
   new PickupEvent(game, 0.5, true, item1),
-  new MoveEvent(game, 10, true, 200)];
+  new MoveEvent(game, 10, true, 200),
+  new DropEvent(game, 0.5, true, item1)];
 
-function handle_play(e) {
+function handlePlay(e) {
   const rect = this.getBoundingClientRect();
   const mouse = {
     x: e.clientX - rect.left,
     y: e.clientY - rect.top
   };
   if (play_button.is_on_button(mouse.x, mouse.y)) {
-    canvas.removeEventListener('click', handle_play);
+    canvas.removeEventListener('click', handlePlay);
     canvas.removeEventListener('mousemove', hover);
     game.play(events);
   }
@@ -105,7 +106,7 @@ function hover(e) {
   play_button.is_on_button(mouse.x, mouse.y);
 }
 
-canvas.addEventListener('click', handle_play);
+canvas.addEventListener('click', handlePlay);
 canvas.addEventListener('mousemove', hover);
 
 
