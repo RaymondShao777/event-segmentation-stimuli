@@ -70,6 +70,8 @@ class DropEvent extends GameEvent {
     super(game, time);
     this.item = item;
     this.speed = this.game.player.width/this.time;
+    this.ticks_to_animate = 4;
+    this.animateCurrent = 1;
   }
 
   update() {
@@ -77,6 +79,10 @@ class DropEvent extends GameEvent {
     if (!this.item.visible) {
       this.item.visible = true;
       this.game.player.drop(this.item);
+    }
+    let animate = (this.animateCurrent++ % this.ticks_to_animate == 0);
+    if (this.time != 1 && animate) {
+      this._game.player.animateDrop();
     }
     this.item.move(this.speed);
   }

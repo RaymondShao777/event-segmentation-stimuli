@@ -76,7 +76,7 @@ const play_button = new Button(ctx, 150, 175, 100, 50, "#DBCDF0", "start");
 
 
 // intialize game
-let game = new Game(1800, 300, 400, bg, true);
+let game = new Game(1800, 300, 400, bg, false);
 // add player
 game.addPlayer = new Player(75, (300-200)*0.75, 125, 200, player_img);
 game.player.addMoveAnimation = playerMove;
