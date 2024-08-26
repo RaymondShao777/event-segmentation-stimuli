@@ -1,63 +1,59 @@
-import game_area from "../game.js"
+//import game_area from "../game.js"
 
-function item(image, sound, width, height, x, y, speed) {
-  this.x = x;
-  this.y = y;
-  this.speed = speed;
-  this.visible = true;
-  this.to_move = 0;
-  this.width = width;
-  this.height = height;
-  this.image = image;
-  this.update = function() {
-    // update animation if player is moving
-    if (this.to_move != 0) {
-      this.to_move -= 1;
-    }
-    if (this.visible) {
-      const ctx = game_area.context;
-      ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
-    }
+class Component {
+  constructor(x, y, width, height, img) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.img = img;
+  }
+
+  move(distance) {
+    this.x += distance;
   }
 }
 
-function player(image, width, height, x, y) {
-  this.x = x;
-  this.y = y;
-  this.speed = 1;
-  this.to_move = 0;
-  this.width = width;
-  this.height = height;
-  this.image = image;
-  this.update = function() {
-    // update animation if player is moving
-    if (this.to_move != 0) {
-      this.to_move -= 1;
-      this.image.src = `assets/sprite_${this.to_move % 8}.png`;
-    } else {
-      this.image.src = "assets/sprite.png";
-    }
-    const ctx = game_area.context;
-    ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+class Item extends Component {
+  constructor(x, y, width, height, img) {
+    super(x, y, width, height, img);
+    this.visible = true;
   }
 }
 
-function background(image, width, height, x, y, speed) {
-  this.x = x;
-  this.y = y;
-  this.speed = speed;
-  this.to_move = 0;
-  this.width = width;
-  this.height = height;
-  this.image = image;
-  this.update = function() {
-    // update animation if player is moving
-    if (this.to_move != 0) {
-      this.to_move -= speed;
-      this.x += speed;
+class Player extends Component {
+  constructor(x, y, width, height, img) {
+    super(x, y, width, height, img);
+    this.backpack = [];
+  }
+
+  pickup(item){
+    this.backpack.push(item);
+  }
+
+  drop(item){
+    this.backpack = this.backpack.splice(this.backpack.indexOf(item), 1);
+  }
+
+  move(distance, animate = false){
+    super.move(distance);
+    for (const i in this.backpack) {
+      this.backpack[i].move(distance);
     }
-    const ctx = game_area.context;
-    ctx.drawImage(this.image, this.x, this.y, this.width, this.height, 0, 0, this.width, this.height);
+
+    if (! animate)
+      return;
+    // advances animation
+    this.img = this.moveCycle[this.current];
+    this.current++;
+    if (this.current == this.moveCycle.length){
+      this.current = 0;
+    }
+  }
+
+  set addMoveAnimation(moves){
+    this.moveCycle = moves;
+    this.current = 0;
   }
 }
 
@@ -122,4 +118,4 @@ function rgb_string(rgb) {
   return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
 }
 
-export {item, player, background, Button}
+export {Player, Button, Item}

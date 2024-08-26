@@ -1,108 +1,95 @@
-import {item, player, background} from "./modules/component.js"
+import {Player} from "./modules/component.js"
 
-// base game loop
-var player_piece;
-var bg;
-var item_event = 0;
-function start_game() {
-  bg = new background(bg_img, game_area.canvas.width, game_area.canvas.height, 0, 0, 50);
-  player_piece = new player(player_img, 96, 96, 150-48, 160);
-  game_area.start();
-}
+const wait = ms => new Promise(res => setTimeout(res, ms));
 
-function update_game() {
-  game_area.clear();
-  bg.update();
-  player_piece.update();
-}
-
-// game window
-let game_area = {
-  canvas : document.getElementById("game"),
-  start : function() {
+class Game {
+  constructor(x, y, camWidth, bg, ticks=64) {
+    this.x = x;
+    this.y = y;
+    this.canvas = document.getElementById("game");
     this.context = this.canvas.getContext("2d");
-    this.interval = setInterval(update_game, 100);
-    // turn off antialiasing
-    this.context.imageSmoothingEnabled= false;
-  },
-  clear : function() {
+    this.bg = bg;
+    this.bgRealWidth = this.bg.width;
+    this.bgRealHeight = this.bg.height;
+    this.bgWidth = this.bgRealWidth * this.y/this.bgRealHeight;
+    this.bgHeight = this.y;
+    this.camWidth = camWidth;
+    this.ticks = ticks; // ticks per second
+    this.msPerTick = 1000/this.ticks;
+    this.items = []
+  }
+  // game loop given list of events
+  async play(events){
+    for (const i in events) {
+      const game_event = events[i];
+      const start = Date.now();
+      let expected = start + this.msPerTick;
+      while (game_event.time > 1) {
+        const drift = Date.now() - expected;
+        if (drift > expected) {
+          console.log("ERROR");
+        }
+        game_event.update();
+        this.draw();
+        expected += this.msPerTick;
+        await wait(Math.max(0, this.msPerTick-drift));
+      }
+      console.log((Date.now() - start)/1000);
+    }
+  }
+
+  // the draw function does not change the state of the game
+  draw(){
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    // draw bg
+    // TODO EDIT CODE SO THAT IT DOES NOT WARP THE IMAGE
+    let bgOffset = this.camX%this.bgWidth/this.bgWidth;
+    // draw x pre
+    this.context.drawImage(this.bg,
+      bgOffset*this.bgRealWidth, 0, (1-bgOffset)*this.bgRealWidth, this.bgRealHeight,
+      0, 0, (1-bgOffset)*this.camWidth, this.y);
+    // draw x post
+    this.context.drawImage(this.bg,
+      0, 0, bgOffset*this.bgRealWidth, this.bgRealHeight,
+      (1-bgOffset)*this.camWidth, 0, bgOffset*this.camWidth, this.y);
+    // draw final segment (if needed)
+
+    // draw items
+    for (const i in this.items) {
+      if (!this.items[i].visible) {
+        continue;
+      }
+      // check that item is in frame
+      if ((this.items[i].x >= this.camX && this.items[i].x < (this.camX+this.camWidth)) ||
+          (this.items[i].x+this.items[i].width > this.camX &&
+           this.items[i].x+this.items[i].width <= (this.camX+this.camWidth))) {
+        this.context.drawImage(this.items[i].img,
+          this.items[i].x - this.camX, this.items[i].y - this.camY,
+          this.items[i].width, this.items[i].height);
+      }
+    }
+
+    // draw player
+    this.context.drawImage(this.player.img,
+      this.player.x - this.camX, this.player.y - this.camY,
+      this.player.width, this.player.height);
+
+  }
+
+  set addPlayer(newPlayer){
+    this.player = newPlayer;
+    this.offset = this.player.x;
+    this.moveCamera();
+    this.camY = 0;
+  }
+
+  set addItem(newItem){
+    this.items.push(newItem);
+  }
+
+  moveCamera(){
+    this.camX = this.player.x - this.offset
   }
 }
 
-// controllers
-function move() {
-  if (player_piece.to_move == 0) {
-    player_piece.to_move = 16;
-    bg.to_move = 16 * bg.speed;
-    item_event += 1;
-  }
-}
-
-// control player movement
-window.addEventListener("keydown", (e) => {
-  if (e.code == "ArrowRight") {
-    move();
-    sounds[0].play();
-  }
-});
-
-// sound
-function sound(src) {
-  this.sound = document.createElement("audio");
-  this.sound.src = src;
-  this.sound.setAttribute("preload", "auto");
-  this.sound.setAttribute("controls", "none");
-  this.sound.style.display = "none";
-  document.body.appendChild(this.sound);
-  this.play = function(){
-    this.sound.play();
-  }
-  this.stop = function(){
-    this.sound.pause();
-  }
-}
-
-// preload images
-function preload(srcs) {
-  const promises = srcs.map((src) => {
-    return new Promise((resolve, reject) => {
-      const image = new Image();
-
-      image.src = src;
-      image.onload = () => resolve(image);
-      image.onerror = () => reject(`Image failed to load: ${src}`);
-    });
-  });
-
-  return Promise.all(promises);
-}
-
-const srcs = [
-  "assets/sprite.png",
-  "assets/bg.png",
-];
-
-const sounds = []
-
-for (let i = 0; i < 8; i++) {
-  const obj_id = Math.floor(Math.random() * 30) + 1
-  srcs.push(`assets/sprite_${i}.png`);
-  srcs.push(`assets/${obj_id}.png`);
-//  sounds.push(`assets/${obj_id}.m4a`);
-  sounds.push(new sound(`assets/test.m4a`));
-}
-
-const images = await preload(srcs);
-const player_img = images[0];
-const bg_img = images[1];
-const object_imgs = []
-for (let i = 10; i < 18; i++) {
-  object_imgs.push(images[i]);
-}
-
-// begin the game loop
-//start_game();
-
-export {start_game}
-export default game_area
+export {Game}
