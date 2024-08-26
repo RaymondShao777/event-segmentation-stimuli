@@ -1,10 +1,9 @@
 class GameEvent {
   _game;
 
-  constructor (game, time, auto) {
+  constructor (game, time) {
     this._game = game;
     this.time = time*game.ticks;
-    this.auto = auto;
   }
 
   get game() {
@@ -17,8 +16,8 @@ class GameEvent {
 }
 // moves player distance to the right, or to item
 class MoveEvent extends GameEvent {
-  constructor (game, time, auto=true, distance=0, {item}={}) {
-    super(game, time, auto);
+  constructor (game, time, distance=0, {item}={}) {
+    super(game, time);
     this.distance = distance;
     this.speed = distance/(time*game.ticks);
     this.ticks_to_animate = 4;
@@ -39,15 +38,24 @@ class MoveEvent extends GameEvent {
 
 // player picks up object
 class PickupEvent extends GameEvent{
-  constructor(game, time, auto=true, item) {
-    super(game, time, auto);
+  constructor(game, time, item) {
+    super(game, time);
     this.item = item;
-    this.speed = (this.item.x-
-      (this._game.player.x+this._game.player.width))/(this.time);
+    this.ticks_to_animate = 4;
+    this.animateCurrent = 1;
   }
 
   update() {
+    if (this.animateCurrent == 1) {
+      this.speed = (this.item.x-
+        (this._game.player.x+this._game.player.width))/(this.time);
+    }
     super.update();
+    let animate = (this.animateCurrent++ % this.ticks_to_animate == 0);
+    if (animate) {
+      this._game.player.animatePickup();
+    }
+
     if (this.time == 1) {
       this._game.player.pickup(this.item);
       this.item.visible = false
@@ -58,8 +66,8 @@ class PickupEvent extends GameEvent{
 
 // player drops object
 class DropEvent extends GameEvent {
-  constructor (game, time, auto=true, item) {
-    super(game, time, auto);
+  constructor (game, time, item) {
+    super(game, time);
     this.item = item;
     this.speed = this.game.player.width/this.time;
   }

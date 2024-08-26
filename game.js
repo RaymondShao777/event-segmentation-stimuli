@@ -1,11 +1,21 @@
 import {Player} from "./modules/component.js"
 
 const wait = ms => new Promise(res => setTimeout(res, ms));
+const readKey = () => new Promise(resolve => window.addEventListener('keydown', resolve, { once: true }));
+const waitKeyPress = async () => {
+  const keyStart = Date.now();
+  document.getElementById('instr').style.display = 'inline';
+  await readKey();
+  document.getElementById('instr').style.display = 'none';
+  return Date.now()-keyStart;
+}
 
 class Game {
-  constructor(x, y, camWidth, bg, ticks=64) {
+  constructor(x, y, camWidth, bg, auto = true, ticks=64) {
     this.x = x;
     this.y = y;
+    this.time = 0;
+    this.auto = auto;
     this.canvas = document.getElementById("game");
     this.context = this.canvas.getContext("2d");
     this.bg = bg;
@@ -21,10 +31,15 @@ class Game {
   // game loop given list of events
   async play(events){
     for (const i in events) {
-      const game_event = events[i];
       const start = Date.now();
       let expected = start + this.msPerTick;
+      const game_event = events[i];
       while (game_event.time > 1) {
+        this.time++;
+        // handle a keypress event
+        if (!this.auto && this.time%(64*2) == 0) {
+          expected += await waitKeyPress();
+        }
         const drift = Date.now() - expected;
         if (drift > expected) {
           console.log("ERROR");
@@ -85,6 +100,10 @@ class Game {
 
   set addItem(newItem){
     this.items.push(newItem);
+  }
+
+  set setAuto(auto){
+    this.auto = auto;
   }
 
   moveCamera(){
