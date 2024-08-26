@@ -4,9 +4,10 @@ const wait = ms => new Promise(res => setTimeout(res, ms));
 const readKey = () => new Promise(resolve => window.addEventListener('keydown', resolve, { once: true }));
 const waitKeyPress = async () => {
   const keyStart = Date.now();
-  document.getElementById('instr').style.display = 'inline';
+  document.getElementById('instr').style.display = 'block';
   await readKey();
   document.getElementById('instr').style.display = 'none';
+  console.log((Date.now()-keyStart)/1000);
   return Date.now()-keyStart;
 }
 
@@ -49,7 +50,7 @@ class Game {
         expected += this.msPerTick;
         await wait(Math.max(0, this.msPerTick-drift));
       }
-      console.log((Date.now() - start)/1000);
+      //console.log((Date.now() - start)/1000);
     }
   }
 
@@ -88,6 +89,8 @@ class Game {
     this.context.drawImage(this.player.img,
       this.player.x - this.camX, this.player.y - this.camY,
       this.player.width, this.player.height);
+
+    // draw fg (grass)
 
   }
 

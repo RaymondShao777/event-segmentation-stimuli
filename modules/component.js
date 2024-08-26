@@ -29,6 +29,7 @@ class Player extends Component {
 
   pickup(item){
     this.backpack.push(item);
+    item.x = this.x;
   }
 
   animatePickup(){
@@ -37,6 +38,14 @@ class Player extends Component {
       this.current = 0;
     }
     this.img = this.pickupCycle[this.current++];
+  }
+
+  animateDrop(){
+    // advances animation
+    if (this.current >= this.pickupCycle.length || this.current == -1){
+      this.current = this.pickupCycle.length - 1;
+    }
+    this.img = this.pickupCycle[this.current--];
   }
 
   drop(item){
