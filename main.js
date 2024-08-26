@@ -43,11 +43,15 @@ const srcs = [
 
 const sounds = []
 const playerMoveSrc = []
+const playerPickupSrc = []
 const objSrc = []
 
 for (let i = 0; i < 16; i++) {
   const obj_id = Math.floor(Math.random() * 30) + 1
   playerMoveSrc.push(`assets/w${i+1}.png`);
+  if (i < 7){
+    playerPickupSrc.push(`assets/r${i+1}.png`);
+  }
   objSrc.push(`assets/${obj_id}.png`);
 //  sounds.push(`assets/${obj_id}.m4a`);
   sounds.push(new sound(`assets/test.m4a`));
@@ -55,6 +59,7 @@ for (let i = 0; i < 16; i++) {
 
 const images = await preload(srcs);
 const playerMove = await preload(playerMoveSrc);
+const playerPickup = await preload(playerPickupSrc);
 const player_img = playerMove[0];
 const bg = images[1];
 const object_imgs = await preload(objSrc);
@@ -71,18 +76,19 @@ const play_button = new Button(ctx, 150, 175, 100, 50, "#DBCDF0", "start");
 
 
 // intialize game
-let game = new Game(1800, 300, 400, bg, 64);
+let game = new Game(1800, 300, 400, bg, true);
 // add player
 game.addPlayer = new Player(75, (300-200)*0.75, 125, 200, player_img);
 game.player.addMoveAnimation = playerMove;
+game.player.addPickupAnimation = playerPickup;
 // add objects
 const item1 = new Item(300, 175, 84, 84, object_imgs[0]);
 game.addItem = item1;
 // add events
-let events = [new MoveEvent(game, 5, true, 100),
-  new PickupEvent(game, 0.5, true, item1),
-  new MoveEvent(game, 10, true, 200),
-  new DropEvent(game, 0.5, true, item1)];
+let events = [new MoveEvent(game, 5, 100),
+  new PickupEvent(game, 0.5, item1),
+  new MoveEvent(game, 10, 200),
+  new DropEvent(game, 0.5, item1)];
 
 function handlePlay(e) {
   const rect = this.getBoundingClientRect();
