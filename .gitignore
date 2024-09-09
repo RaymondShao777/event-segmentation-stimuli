@@ -4,6 +4,7 @@ build
 dist
 .vite
 package-lock.json
+.db
 
 # local env files
 .env.local
