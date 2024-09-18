@@ -1,3 +1,4 @@
+const z = require('zod');
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
@@ -19,7 +20,7 @@ const port = 3000;
 
 // load experimenter page
 app.get('/', (req, res) => {
-  res.send();
+  res.send('uwu');
 })
 
 // get all participants
@@ -54,49 +55,87 @@ app.get('/api/participants/:uid', (req, res) => {
   });
 });
 
+// create zod schema (for input validation)
+const Participant = z.object({
+  uid: z.number(),
+  first: z.string(),
+  last: z.string(),
+  condition: z.number(),
+  duration: z.number(),
+  start: z.string().datetime(),
+  finish: z.string().datetime(),
+  durations: z.union([z.number(), z.string().datetime()]).array().array(),
+});
+
 // add a participant with their data
 app.post('/api/participants', (req, res) => {
-  const {uid, first, last, condition, durations} = req.body;
+  console.log(req.body);
+  Participant.parse(req.body);
+  const {uid, first, last, condition, duration, start, finish, durations} = req.body;
   // check if UID already exists in database
   db.get('SELECT * FROM participants WHERE uid = ?', [uid], (err, row) => {
     if (err) {
       console.error(err.message);
       res.status(500).send('INTERNAL SERVICE ERROR');
       return;
-    } else if (row) {
+    }
+
+    if (row) {
       res.status(409).send("You've already completed this study!\n");
       return;
     }
+  });
 
-    // add new participant to db
-    let sql = 'INSERT INTO participants(uid, first_name, last_name, condition) VALUES (?, ?, ?, ?)';
-    db.run(sql, [uid, first, last, condition], (err) => {
-      if (err) {
-        console.error(err.message);
-        res.status(500).send('INTERNAL SERVICE ERROR');
-        return;
-      }
-    });
+  // add new participant to db
+  let sql = 'INSERT INTO participants(uid, first_name, last_name, condition, duration, start, finish) VALUES (?, ?, ?, ?, ?, ?, ?)';
+  db.run(sql, [uid, first, last, condition, duration, start, finish], (err) => {
+    if (err) {
+      console.error(err.message);
+      res.status(500).send('INTERNAL SERVICE ERROR');
+    }
+  });
 
-    // get PID
-    db.all('SELECT COUNT(*) FROM participants', (err, row) => {
-      const pid = row[0]['COUNT(*)'];
-      // add duration events into db
-      sql = 'INSERT INTO events(pid, duration) VALUES (?, ?)';
-      for (const i in durations) {
-        db.run(sql, [pid, durations[i]], (err) => {
-          if (err) {
-            console.error(err.message);
-            res.status(500).send('INTERNAL SERVICE ERROR');
-            return;
-          }
-        });
-      }
-      res.status(201).send('Response recorded!\n');
-    });
+  // get PID
+  db.all('SELECT COUNT(*) FROM participants', (err, row) => {
+    const pid = row[0]['COUNT(*)'];
+    // add duration events into db
+    sql = 'INSERT INTO events(pid, duration, time_stamp) VALUES (?, ?, ?)';
+    for (const i in durations) {
+      db.run(sql, [pid, durations[i][0], durations[i][1]], (err) => {
+        if (err) {
+          console.error(err.message);
+          res.status(500).send('INTERNAL SERVICE ERROR');
+          return;
+        }
+      });
+    }
+    res.status(201).send('Response recorded!\n');
   });
 });
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
+
+/*-------------------------------------------------------------
+ Helper functions
+-------------------------------------------------------------*/
+
+/**
+ * Counts the number of rows in a table
+ * @param {sqlite3.Database} db - The database to access
+ * @param {string} tableName - The table to count
+ * @returns {int} Number of rows in table
+ */
+/* IDK HOW TO GET THE CALLBACK INFO OUT INTO THE MAIN FUNCTION RETURN TT
+function count (db, tableName) {
+  let callback = (err, rows) => { 
+    if (err) {
+      console.error(err.message);
+    }
+    return rows['COUNT(*)'];
+  };
+  const res = db.get(`SELECT COUNT(*) FROM ${tableName}`, callback).rows;
+  console.log(res);
+  return res;
+}*/

@@ -1,16 +1,6 @@
 import {Player} from "./modules/component.js"
 import {click} from "./modules/assets.js"
-
-const wait = ms => new Promise(res => setTimeout(res, ms));
-const readKey = () => new Promise(resolve => window.addEventListener('keydown', resolve, { once: true }));
-const waitKeyPress = async () => {
-  const keyStart = Date.now();
-  document.getElementById('instr').style.display = 'block';
-  await readKey();
-  document.getElementById('instr').style.display = 'none';
-  console.log((Date.now()-keyStart)/1000);
-  return Date.now()-keyStart;
-}
+import {wait, recordKeyPress, getDateISO} from "./modules/helper.js"
 
 class Game {
   constructor(x, y, camWidth, bg, auto = true, ticks=64) {
@@ -28,19 +18,22 @@ class Game {
     this.camWidth = camWidth;
     this.ticks = ticks; // ticks per second
     this.msPerTick = 1000/this.ticks;
-    this.items = []
+    this.items = [];
   }
+
   // game loop given list of events
   async play(events){
     const durations = [];
     const globalStart = Date.now();
     const recordTime = () => {
-      this.canvas.style.border = "4px solid blue";
+      this.canvas.style.borderColor = "blue";
       click.play();
-      durations.push((Date.now()-globalStart)/1000);
+      const time = Date.now();
+      durations.push([(time-globalStart)/1000, getDateISO(time)]);
       console.log((Date.now()-globalStart)/1000);
-      setTimeout(() => {this.canvas.style.border = "4px solid transparent"}, 25);
+      setTimeout(() => {this.canvas.style.borderColor = "transparent"}, 25);
     }
+
     // add event listener if auto
     if (this.auto) {
       window.addEventListener('keydown', recordTime);
@@ -54,9 +47,10 @@ class Game {
         this.time++;
         // handle a keypress event
         if (!this.auto && this.time%(64*2) == 0) {
-          const duration = await waitKeyPress();
+          const duration = await recordKeyPress();
           expected += duration;
-          durations.push(duration/1000);
+          const time = Date.now();
+          durations.push([duration/1000, getDateISO(time)]);
         }
         const drift = Date.now() - expected;
         if (drift > expected) {
@@ -112,7 +106,7 @@ class Game {
       this.player.x - this.camX, this.player.y - this.camY,
       this.player.width, this.player.height);
 
-    // draw fg (grass)
+    // draw fg (grass) we would use this for parallax
 
   }
 

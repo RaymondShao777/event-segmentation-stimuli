@@ -2,6 +2,7 @@ import {Player, Button, Item} from "./modules/component.js"
 import {MoveEvent, PickupEvent, DropEvent} from "./modules/event.js"
 import {Game} from "./game.js"
 import {click, images, playerMove, playerPickup, playerImg, bg, objectImgs} from "./modules/assets.js"
+import {getDateISO} from "./modules/helper.js"
 const canvas = document.getElementById("game");
 
 const ctx = canvas.getContext("2d");
@@ -39,24 +40,32 @@ async function handlePlay(e) {
     canvas.removeEventListener('click', handlePlay);
     canvas.removeEventListener('mousemove', hover);
     // FOR TESTING
-    const uid = 4010;
+    const uid = 193;
     const first = "jane";
     const last = "doe";
     // set game settings
     const res = await fetch(`http://localhost:3000/api/participants/${uid}`);
+    // start timer
+    const start = Date.now();
     // play game
     if (res.ok) {
       const data = await res.json();
       game.setAuto = data['auto'];
       const condition = data['auto'] ? 0 : 1;
       const durations = await game.play(events);
+      const finish = Date.now();
+      console.log(durations);
       console.log(JSON.stringify({
-        uid: uid,
-        first: first,
-        last: last,
-        condition: condition,
-        durations: durations,
-      }));
+          uid: uid,
+          first: first,
+          last: last,
+          condition: condition,
+          duration: (finish-start)/1000,
+          start: getDateISO(start),
+          finish: getDateISO(finish),
+          durations: durations,
+        }));
+      alert();
 
       // send participant info to server
       fetch('http://localhost:3000/api/participants', {
@@ -67,6 +76,9 @@ async function handlePlay(e) {
           first: first,
           last: last,
           condition: condition,
+          duration: (finish-start)/1000,
+          start: getDateISO(start),
+          finish: getDateISO(finish),
           durations: durations,
         }),
       })
