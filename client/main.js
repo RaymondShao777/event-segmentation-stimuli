@@ -44,7 +44,7 @@ async function handlePlay(e) {
     const first = "jane";
     const last = "doe";
     // set game settings
-    const res = await fetch(`http://localhost:3000/api/participants/${uid}`);
+    const res = await fetch(`/api/participants/${uid}`);
     // start timer
     const start = Date.now();
     // play game
@@ -68,7 +68,7 @@ async function handlePlay(e) {
       alert();
 
       // send participant info to server
-      fetch('http://localhost:3000/api/participants', {
+      fetch('/api/participants', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
