@@ -1,4 +1,4 @@
-//import game_area from "../game.js"
+import {rgbString} from "./helper.js"
 
 class Component {
   constructor(x, y, width, height, img) {
@@ -12,24 +12,27 @@ class Component {
   move(distance) {
     this.x += distance;
   }
+
+  jump(distance) {
+    this.y -= distance;
+  }
 }
 
 class Item extends Component {
-  constructor(x, y, width, height, img) {
+  constructor(x, y, width, height, img, label="") {
     super(x, y, width, height, img);
     this.visible = true;
+    this.inBox = true;
+    this.label = label;
+    this.labeled = false;
+
   }
 }
 
 class Player extends Component {
   constructor(x, y, width, height, img) {
     super(x, y, width, height, img);
-    this.backpack = [];
-  }
-
-  pickup(item){
-    this.backpack.push(item);
-    item.x = this.x;
+    this.idleImg = img;
   }
 
   animatePickup(){
@@ -40,23 +43,21 @@ class Player extends Component {
     this.img = this.pickupCycle[this.current++];
   }
 
-  animateDrop(){
-    // advances animation
-    if (this.current >= this.pickupCycle.length || this.current == -1){
-      this.current = this.pickupCycle.length - 1;
-    }
-    this.img = this.pickupCycle[this.current--];
-  }
+  jump(distance, animate = false){
+    super.jump(distance);
+    if (! animate)
+      return;
 
-  drop(item){
-    this.backpack = this.backpack.splice(this.backpack.indexOf(item), 1);
+    // advances animation
+    this.img = this.jumpCycle[this.current];
+    this.current++;
+    if (this.current == this.jumpCycle.length){
+      this.current = 0;
+    }
   }
 
   move(distance, animate = false){
     super.move(distance);
-    for (const i in this.backpack) {
-      this.backpack[i].move(distance);
-    }
 
     if (! animate)
       return;
@@ -68,6 +69,10 @@ class Player extends Component {
     }
   }
 
+  idle(){
+    this.img = this.idleImg;
+  }
+
   set addMoveAnimation(moves){
     this.moveCycle = moves;
     this.current = 0;
@@ -77,23 +82,57 @@ class Player extends Component {
     this.pickupCycle = pickup;
     this.current = 0;
   }
+
+  set addJumpAnimation(jump){
+    this.jumpCycle = jump;
+    this.current = 0;
+  }
 }
 
 class Button {
   #rgb;
 
-  constructor(ctx, x, y, width, height, fill_color="red", text="") {
-    this.ctx = ctx;
+  constructor(canvas, callback=()=>{return;}, x=0, y=0, width=100, height=100, fill_color="red", text="") {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext("2d");
     this.x = x;
     this.y = y;
     this.darken = false;
     this.width = width;
     this.height = height;
     this.ctx.fillStyle = fill_color;
+    // allows color strings
     this.#rgb = this.ctx.fillStyle.match(/[\d\w]{2}/g).map((hex) => {
       return parseInt(`0x${hex}`);
     });
     this.text = text;
+
+    // add button effects (hover and press effect)
+    const hover = (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+      const mouse = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+      this.isOnButton(mouse.x, mouse.y);
+    };
+    this.canvas.addEventListener('mousemove', hover);
+
+    const onPress = (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+      const mouse = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+      if (this.isOnButton(mouse.x, mouse.y)) {
+        canvas.removeEventListener('click', onPress);
+        canvas.removeEventListener('mousemove', hover);
+        callback();
+      };
+    };
+    this.canvas.addEventListener('click' , onPress);
+
+    // draw the button
     this.draw();
   }
 
@@ -107,7 +146,7 @@ class Button {
     } else {
       rgb = this.#rgb;
     }
-    this.ctx.fillStyle = rgb_string(rgb);
+    this.ctx.fillStyle = rgbString(rgb);
     // draw button
     this.ctx.beginPath();
     this.ctx.roundRect(this.x, this.y, this.width, this.height, this.width*this.height/1000);
@@ -125,7 +164,8 @@ class Button {
     this.ctx.fillText(this.text, this.x+(this.width/2), this.y+(this.height/2), this.width);
   }
 
-  is_on_button(x, y) {
+  // checks if button is being hovered (also enables darkening)
+  isOnButton(x, y) {
     if ((x >= this.x && x <= this.x+this.width) &&
       (y >= this.y && y <= this.y+this.height))
       this.darken = true;
@@ -134,10 +174,8 @@ class Button {
     this.draw();
     return this.darken;
   }
+
 }
 
-function rgb_string(rgb) {
-  return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
-}
 
 export {Player, Button, Item}

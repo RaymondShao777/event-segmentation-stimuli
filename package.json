@@ -10,5 +10,9 @@
   },
   "devDependencies": {
     "vite": "^5.3.4"
+  },
+  "dependencies": {
+    "sqlite3": "^5.1.7",
+    "zod": "^3.23.8"
   }
 }
